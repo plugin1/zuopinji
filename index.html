@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张姜盼盼作品集 2025</title>
+    
+    <!-- 1. 样式库 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. 核心引擎 (国内源) -->
+    <script src="https://cdn.staticfile.org/react/18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.staticfile.org/react-dom/18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.staticfile.org/babel-standalone/7.22.20/babel.min.js"></script>
+
+    <style>
+        body { background-color: #1a1a1d; margin: 0; font-family: system-ui, sans-serif; overflow: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.5); border-radius: 20px; }
+        .perspective-1000 { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        /* 加载动画 */
+        #loading { position: fixed; inset: 0; background: #1a1a1d; color: white; display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
+    </style>
+</head>
+<body>
+    <!-- 启动加载页 -->
+    <div id="loading">
+        <div class="text-center">
+            <div class="text-2xl font-bold animate-pulse mb-2">SYSTEM LOADING...</div>
+            <div class="text-xs text-gray-500">正在连接云端数据库</div>
+        </div>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // 关闭加载动画
+        window.onload = () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loading');
+                if(loader) { loader.style.opacity = 0; setTimeout(() => loader.remove(), 500); }
+            }, 800);
+        };
+
+        const { useState, useRef, useEffect } = React;
+
+        // --- 内置图标组件 ---
+        const Icons = {
+            Play: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+            ChevronLeft: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>,
+            ChevronRight: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>,
+            X: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 12"/></svg>,
+            Zap: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+            Box: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
+            ArrowLeft: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+            User: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+            IdCard: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="12" x="3" y="5" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M14 15h2"/><path d="M14 11h4"/></svg>,
+            CheckCircle: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            Star: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+            Mail: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>,
+            Phone: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+            ZoomIn: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>,
+            Layers: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        };
+
+        // --- 链接修复逻辑 (直接使用 GitHub Raw 链接，方便在线部署) ---
+        // 基础 URL 设置为你之前的仓库地址，这样你只需要传这一个 HTML 文件就行
+        const GITHUB_BASE = "https://raw.githubusercontent.com/plugin1/zuopinji/main/";
+
+        const fixUrl = (url) => {
+            if (!url) return "";
+            if (url.startsWith("http")) {
+                // 如果是 blob 链接，自动转 raw
+                if (url.includes('github.com') && url.includes('/blob/')) {
+                    return url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                }
+                return url;
+            }
+            // 默认拼接你的仓库地址，确保在线能看
+            return `${GITHUB_BASE}${encodeURIComponent(url)}`;
+        };
+
+        const CONFIG = {
+            info: {
+                title: "张姜盼盼作品集 2025",
+                description: "长情冒险家 深度研究员\n飞速学习者 洞若观火人\n实干建筑师 灵感淘金客\n传奇抗压王 铁臂救火员\n水土全服者 夜晚享受人\n犀利锐评者 挥铲老吃家\n快乐小品王 美好观察员", 
+            },
+            assets: {
+                introVideo: "我是谁.mp4", // 使用文件名，fixUrl 会自动拼上去
+                logo: "宝可梦logo.png",
+                photo: "大新证件照202509.png",
+                nameTag: "名字年龄联系方式.png",
+                // 使用你指定的最新卡牌链接
+                card: "https://github.com/plugin1/zuopinji/blob/main/%E5%8D%A7%E6%A7%BD.png", 
+                evolutionChain: "进化.png",
+                radarChart: "六边形.png",
+            },
+            skills: [
+                { name: "创造力", value: 100, color: "bg-purple-500" },
+                { name: "成长性", value: 120, color: "bg-red-500" }, 
+                { name: "学习力", value: 130, color: "bg-orange-500" }, 
+                { name: "精密性", value: 90, color: "bg-blue-500" },
+                { name: "持续力", value: 110, color: "bg-green-500" }, 
+                { name: "速度", value: 85, color: "bg-yellow-500" },  
+            ],
+            resume: {
+                education: [
+                { 
+                    school: "早稻田大学", loc: "东京，日本", 
+                    dept: "政治经济学部 经济学 本科", time: "将于2027年9月毕业",
+                    details: [
+                    "奖学金：Reserved Scholarship for Successful International Examinees（2023 – 2024）、SPSE Global Leader Support Scholarship（2025秋 – 2027春）",
+                    "课程研究项目：中日经济发展历程比较分析（聚焦研究日本女性经济参与议题）、“狐”的形象演变及其对日本文化的影响、濒危的中国方言（以北方方言的维护为例）、中国青春电影的演变过程与“校园青春”电影分析"
+                    ]
+                },
+                { 
+                    school: "台湾大学", loc: "中国台北", 
+                    dept: "与早稻田大学双学位项目 社会科学院 经济学部 本科", time: "将于2027年9月毕业",
+                    details: []
+                },
+                { 
+                    school: "汉阳大学", loc: "首尔，韩国", 
+                    dept: "汉阳国际冬校", time: "2025年2月",
+                    details: ["课程研究项目：《釜山行》作为反乌托邦电影与韩国商业大片的有效公式探讨"]
+                }
+                ],
+                experience: [
+                {
+                    org: "中国银行忻州市分行建设路支行", loc: "山西",
+                    role: "大堂经理（实习）", time: "2025年2月 - 2025年4月"
+                },
+                {
+                    org: "中国移动通信集团山西有限公司忻州分公司", loc: "山西",
+                    role: "综合支持中心 业务支持（实习）", time: "2024年2月 - 2025年3月",
+                    details: [
+                    "独立协调2024年度基层调研项目，负责外勤人员调配安排，确保覆盖精准并高效执行",
+                    "制作企业合作伙伴拓展宣传材料，为成功建立2项赞助合作提供了关键支持"
+                    ]
+                }
+                ],
+                activities: [
+                {
+                    org: "第六届“泸沽湖畔少年行”公益夏令营", loc: "云南",
+                    role: "志愿者教师", time: "2025年8月",
+                    details: [
+                    "为来自3个村落的100余名当地儿童设计并开展一周的中国传统剪纸艺术课程，促进文化遗产传承与创意表达",
+                    "开展摩梭社区民族志田野调查，通过参与式观察与深度访谈，深入了解母系社会结构、习俗、信仰与变迁"
+                    ]
+                },
+                {
+                    org: "早稻田大学中国学友会", loc: "东京，日本",
+                    role: "宣传部视觉组成员", time: "2023年9月至今",
+                    details: [
+                    "负责微信公众号及Instagram的宣传内容策划、视觉设计与运营，精准触达早稻田大学3000余名中国留学生",
+                    "深度参与并协助执行“早稻田祭”、新年晚会及多校联合庆典等大型活动的线上线下宣传工作"
+                    ]
+                }
+                ],
+                skills: "语言技能：中文（HSK9级、普通话一乙）、英语（流利）、日语（基础）\n技术技能：办公软件（Word, Excel, PowerPoint）、设计/绘图（Procreate, Photoshop, Canva）、编程与数据分析（R, Python, GitHub）、AI工具（ChatGPT, Gemini, DeepSeek, Qwen, Grok, Notion）\n其他：视频剪辑（Capcut Pro）、摄影（胶片、数码）、设计（传统剪纸、美甲设计、字体设计、产品设计）"
+            },
+            gallery: [
+                {
+                id: "digital_planner",
+                title: "电子日程本设计",
+                type: "grid",
+                desc: "",
+                thumbnail: "2.png", 
+                items: ["1.png", "2.png", "3.png", "4.png", "5.png"]
+                },
+                {
+                id: "style_mimic",
+                title: "风格模仿",
+                type: "compare_row", 
+                desc: "",
+                thumbnail: "四8_仿画风1_张姜盼盼_12月31日到.PNG", 
+                pairs: [
+                    { ref: "四81参考.png", res: "四8_仿画风1_张姜盼盼_12月31日到.PNG" },
+                    { ref: "四82参考.png", res: "四8_仿画风2_张姜盼盼_12月31日到.PNG" }
+                ]
+                },
+                {
+                id: "painting",
+                title: "绘画",
+                type: "grid_4col", 
+                desc: "",
+                // 更新封面为生活照2
+                thumbnail: "四10_手绘4_生活照2_张姜盼盼_12月31日到.jpg", 
+                items: [
+                    "四10_手绘1_张姜盼盼_12月31日到.jpg",
+                    "四10_手绘4_生活照1_张姜盼盼_12月31日到.jpg",
+                    "四10_手绘4_生活照2_张姜盼盼_12月31日到.jpg",
+                    "四10_手绘4_生活照3_张姜盼盼_12月31日到.png"
+                ]
+                },
+                {
+                id: "character_design",
+                title: "人物设计",
+                type: "split", 
+                desc: "角色设定、Q版、头像及NFC芯片产品实物", 
+                thumbnail: "四3_仿画风头像1_张姜盼盼_12月31日到.PNG", 
+                main: "四4_人物设计_张姜盼盼_12月31日到.JPG",
+                subItems: [
+                    { type: "img", src: "四3_仿画风头像1_张姜盼盼_12月31日到.PNG" },
+                    { type: "img", src: "四3_仿画风头像2_张姜盼盼_12月31日到.jpg" },
+                    { type: "video", src: "四3_仿画风头像_NFC标签_张姜盼盼_12月31日到.mov" }
+                ]
+                },
+                {
+                id: "hand_crochet",
+                title: "手工 (钩针)",
+                type: "single",
+                desc: "",
+                thumbnail: "四7_钩针_张姜盼盼_12月31日到.jpg",
+                src: "四7_钩针_张姜盼盼_12月31日到.jpg"
+                },
+                {
+                id: "splatoon",
+                title: "斯普拉遁3风格设计",
+                type: "compare_columns",
+                desc: "",
+                thumbnail: "四6_人物设计_张姜盼盼_12月31日到.png", 
+                cols: [
+                    { 
+                        title: "角色", 
+                        items: [
+                            { src: "四6参考.png", label: "参考", flex: 0.6 }, 
+                            { src: "四6_人物设计_张姜盼盼_12月31日到.png", label: "设计", flex: 1.4 } 
+                        ], 
+                        flex: 1.0 
+                    }, 
+                    { title: "工牌", items: ["四9_工牌设计_正_张姜盼盼_12月31日到.PNG", "四9_工牌设计_反_张姜盼盼_12月31日到.PNG"], flex: 1.0 },
+                    { title: "学生证", items: ["四9_学生证设计_正_张姜盼盼_12月31日到.jpg", "四9_学生证设计_反_张姜盼盼_12月31日到.PNG"], flex: 1.0 }
+                ]
+                },
+                {
+                id: "field_research",
+                title: "田野研究",
+                type: "grid_large",
+                desc: "开展摩梭社区民族志田野调查，通过参与式观察与深度访谈，深入了解母系社会结构、习俗、信仰与变迁。",
+                thumbnail: "一日摩梭1.jpg", 
+                items: ["一日摩梭1.jpg", "一日摩梭2.jpg"]
+                },
+                {
+                id: "paper_cut",
+                title: "传统剪纸",
+                type: "masonry", 
+                desc: "第六届“泸沽湖畔少年行”公益夏令营 云南志愿者教师 2025年8月\n为来自3个村落的100余名当地儿童设计并开展一周的中国传统剪纸艺术课程，促进文化遗产传承与创意表达",
+                // 移除封面 cut_thumb，使用第一张作品做封面
+                thumbnail: "4c67a4c3bde6dec2b5bb2df6a2ad844e.jpg", 
+                items: [
+                    "4c67a4c3bde6dec2b5bb2df6a2ad844e.jpg",
+                    "be441c5782ed10fd7722aca01abcb328.jpg",
+                    "IMG_3620.jpg",
+                    "IMG_3627.JPG",
+                    "IMG_4118.jpg",
+                    "IMG_4147.jpg",
+                    "IMG_4149.jpg",
+                    "IMG_4148.jpg"
+                ]
+                },
+                // --- 进化作品 ---
+                {
+                id: "nail_art",
+                title: "美甲设计",
+                type: "evolution",
+                desc: "设计稿 → 设计图 → 实物图",
+                thumbnail: "四5_美甲设计_实物图_张姜盼盼_12月31日到.png",
+                stages: [
+                    { name: "设计稿", src: "四5_美甲设计_设计稿_张姜盼盼_12月31日到.png" },
+                    { name: "设计图", src: "四5_美甲设计_设计图_张姜盼盼_12月31日到.png" },
+                    { name: "实物图", src: "四5_美甲设计_实物图_张姜盼盼_12月31日到.png" }
+                ]
+                },
+                {
+                id: "patches_design",
+                title: "产品设计", 
+                type: "evolution",
+                desc: "电脑百贴布：设计图 → 实物展示", 
+                thumbnail: "四11_电脑百贴布设计_设计图_张姜盼盼_12月31日到.PNG",
+                stages: [
+                    { name: "设计图", src: "四11_电脑百贴布设计_设计图_张姜盼盼_12月31日到.PNG" },
+                    { name: "实物", src: ["四11_电脑百贴布设计_实物图1_张姜盼盼_12月31日到.jpg", "四11_电脑百贴布设计_实物图2_张姜盼盼_12月31日到.jpg"] }
+                ]
+                },
+            ]
+        };
+
+        // --- 组件部分 ---
+
+        const Lightbox = ({ src, onClose }) => {
+            if (!src) return null;
+            const isArray = Array.isArray(src);
+            return (
+                <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 animate-in fade-in duration-300 backdrop-blur-sm" onClick={onClose}>
+                    <button className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors bg-white/10 rounded-full p-2">
+                        <Icons.X className="w-8 h-8" />
+                    </button>
+                    <div className="w-full h-full flex items-center justify-center" onClick={e => e.stopPropagation()}>
+                        {isArray ? (
+                            <div className="flex gap-4 w-full h-full items-center justify-center overflow-x-auto p-4">
+                                {src.map((s, i) => (
+                                    <img key={i} src={fixUrl(s)} className="max-h-full max-w-[80vw] object-contain shadow-2xl rounded-lg" />
+                                ))}
+                            </div>
+                        ) : (
+                            src.toLowerCase().endsWith('.mov') || src.toLowerCase().endsWith('.mp4') ? (
+                                <video src={fixUrl(src)} controls autoPlay className="max-w-full max-h-full rounded-lg shadow-2xl" />
+                            ) : (
+                                <img src={fixUrl(src)} className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
+                            )
+                        )}
+                    </div>
+                </div>
+            )
+        }
+
+        const MediaItem = ({ src, className, isVideo, onZoom }) => {
+            const vRef = useRef(null);
+            const [playing, setPlaying] = useState(false);
+            
+            if (Array.isArray(src)) {
+                return (
+                    <div className={`flex w-full h-full gap-2 ${className}`}>
+                        {src.map((s, i) => (
+                            <div key={i} className="flex-1 h-full relative cursor-zoom-in group min-w-0 bg-white rounded-lg overflow-hidden border border-gray-100" onClick={(e) => { e.stopPropagation(); onZoom(src); }}>
+                                <img src={fixUrl(s)} className="w-full h-full object-contain" />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+                                    <Icons.ZoomIn className="text-white drop-shadow-md w-6 h-6"/>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )
+            }
+
+            let finalSrc = fixUrl(src);
+            const isMov = finalSrc.toLowerCase().includes('.mov') || finalSrc.toLowerCase().includes('.mp4') || isVideo;
+
+            if (isMov) {
+                return (
+                    <div className={`relative bg-black group cursor-pointer flex items-center justify-center overflow-hidden rounded-lg ${className}`} onClick={(e) => {
+                        e.stopPropagation();
+                        if(vRef.current) {
+                            playing ? vRef.current.pause() : vRef.current.play();
+                            setPlaying(!playing);
+                        }
+                    }}>
+                        <video 
+                            ref={vRef}
+                            src={finalSrc} 
+                            className="max-w-full max-h-full object-contain" 
+                            playsInline 
+                            loop
+                        />
+                        {!playing && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10 transition-opacity hover:bg-black/30">
+                                <Icons.Play className="text-white fill-white drop-shadow-lg scale-100 group-hover:scale-110 transition-transform w-12 h-12"/>
+                            </div>
+                        )}
+                    </div>
+                )
+            }
+            return (
+                <div className={`relative group w-full h-full flex items-center justify-center rounded-lg overflow-hidden bg-white ${className}`} onClick={(e) => { e.stopPropagation(); onZoom(src); }}>
+                    <img src={finalSrc} className="max-w-full max-h-full object-contain cursor-zoom-in transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <div className="bg-black/40 p-2 rounded-full backdrop-blur-sm shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                            <Icons.ZoomIn className="text-white w-5 h-5"/>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const EvolutionViewer = ({ stages, onZoom, isIdle }) => {
+            const [level, setLevel] = useState(0);
+            const [isEvolving, setIsEvolving] = useState(false);
+
+            const handleEvolve = () => {
+                if (level >= stages.length - 1) {
+                    setLevel(0); 
+                    return;
+                }
+                setIsEvolving(true);
+                setTimeout(() => {
+                    setLevel(p => p + 1);
+                    setIsEvolving(false);
+                }, 800);
+            };
+
+            const currentStage = stages[level];
+            const canEvolve = level < stages.length - 1;
+
+            return (
+                <div className="flex flex-row h-full gap-6 overflow-hidden">
+                    <div className="flex-[2] relative bg-gray-50 overflow-hidden flex items-center justify-center border border-gray-100 rounded-2xl shadow-inner p-2">
+                        {isEvolving && (
+                            <div className="absolute inset-0 z-50 bg-white/90 animate-ping flex items-center justify-center backdrop-blur-sm">
+                                <Icons.Star className="text-yellow-400 animate-spin fill-yellow-400 drop-shadow-xl w-32 h-32"/>
+                            </div>
+                        )}
+                        <MediaItem src={currentStage.src} onZoom={onZoom} className="max-w-full max-h-full" />
+                        <div className="absolute top-4 left-4 bg-black/80 text-white px-4 py-1.5 rounded-full text-sm font-bold tracking-widest z-10 shadow-lg border border-white/10 backdrop-blur-md">
+                            {currentStage.name}
+                        </div>
+                    </div>
+                    <div className="flex-1 flex flex-col gap-4 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm min-w-[200px]">
+                        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                            <div className="bg-blue-50 rounded-full p-4 mb-2"><Icons.Layers className="text-blue-500 w-10 h-10" /></div>
+                            <h3 className="text-lg font-bold text-gray-800">设计进化</h3>
+                            <p className="text-xs text-gray-500 leading-relaxed px-2">点击下方按钮，见证从草图到实物的完整蜕变过程。</p>
+                            <div className="flex gap-3 my-4">
+                                {stages.map((_, idx) => (
+                                    <div key={idx} className={`w-3 h-3 rounded-full transition-all duration-500 ${idx === level ? 'bg-blue-500 scale-150 shadow-md ring-2 ring-blue-200' : 'bg-gray-200'}`}></div>
+                                ))}
+                            </div>
+                        </div>
+                        <button onClick={handleEvolve} className={`w-full py-4 rounded-xl font-black text-lg tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 group ${canEvolve ? `bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:shadow-orange-200 hover:-translate-y-1 ${isIdle ? 'animate-pulse ring-4 ring-yellow-200' : ''}` : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
+                            {canEvolve ? <><Icons.Zap className="fill-white group-hover:animate-bounce w-6 h-6"/> 点击进化 !</> : <span className="flex items-center gap-2"><div className="w-2 h-2 bg-gray-400 rounded-full"></div> 重置</span>}
+                        </button>
+                    </div>
+                </div>
+            )
+        }
+
+        function App() {
+            const [slide, setSlide] = useState(0);
+            const [selectedWork, setSelectedWork] = useState(null); 
+            const [capturedIds, setCapturedIds] = useState([]);
+            const [videoPlaying, setVideoPlaying] = useState(false);
+            const [zoomSrc, setZoomSrc] = useState(null);
+            const [isIdle, setIsIdle] = useState(false);
+            const videoRef = useRef(null);
+            const idleTimerRef = useRef(null);
+            
+            const totalSlides = 8; 
+
+            const nextSlide = () => { if (!selectedWork) setSlide(p => Math.min(p + 1, totalSlides)); };
+            const prevSlide = () => { selectedWork ? setSelectedWork(null) : setSlide(p => Math.max(p - 1, 0)); };
+
+            const handleCapture = (work) => {
+                setSelectedWork(work);
+                if (!capturedIds.includes(work.id)) setCapturedIds([...capturedIds, work.id]);
+            };
+
+            const handlePlayVideo = () => {
+                if (videoRef.current) {
+                    videoRef.current.play().catch(e => console.log("Autoplay prevented"));
+                    setVideoPlaying(true);
+                }
+            };
+
+            const resetIdleTimer = () => {
+                setIsIdle(false);
+                if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+                idleTimerRef.current = setTimeout(() => setIsIdle(true), 5000); 
+            };
+
+            useEffect(() => {
+                const events = ['mousemove', 'keydown', 'click', 'scroll'];
+                const handler = () => resetIdleTimer();
+                events.forEach(e => window.addEventListener(e, handler));
+                resetIdleTimer();
+                return () => {
+                    events.forEach(e => window.removeEventListener(e, handler));
+                    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+                }
+            }, []);
+
+            useEffect(() => {
+                const handleKey = (e) => {
+                    resetIdleTimer();
+                    if (zoomSrc) {
+                        if (e.key === 'Escape') setZoomSrc(null);
+                        return;
+                    }
+                    if (e.key === 'ArrowRight') nextSlide();
+                    if (e.key === 'ArrowLeft') prevSlide();
+                    if (e.key === 'Escape') setSelectedWork(null);
+                };
+                window.addEventListener('keydown', handleKey);
+                return () => window.removeEventListener('keydown', handleKey);
+            }, [selectedWork, slide, zoomSrc]);
+
+            const renderDetailContent = (work) => {
+                switch(work.type) {
+                    case 'split':
+                        return (
+                            <div className="flex flex-col md:flex-row h-full gap-4 overflow-hidden">
+                                <div className="flex-[2] bg-gray-50 border border-gray-100 rounded-xl overflow-hidden flex items-center justify-center p-2 shadow-inner">
+                                    <MediaItem src={work.main} onZoom={setZoomSrc} />
+                                </div>
+                                <div className="flex-1 flex flex-col gap-4 overflow-y-auto min-w-[200px] pr-1">
+                                    {work.subItems.map((sub, i) => (
+                                        <div key={i} className="flex-1 bg-gray-50 border border-gray-100 rounded-xl overflow-hidden min-h-[140px] flex items-center justify-center relative shadow-sm hover:shadow transition-shadow">
+                                            <MediaItem src={sub.src} isVideo={sub.type==='video'} onZoom={setZoomSrc} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    case 'compare_columns':
+                        return (
+                            <div className="h-full flex gap-4 overflow-hidden">
+                                {work.cols.map((col, i) => (
+                                    <div key={i} className="flex flex-col gap-3 h-full" style={{flex: col.flex}}>
+                                        <h4 className="text-center text-xs font-bold text-gray-500 bg-gray-100 py-1.5 rounded-lg border border-gray-200 shrink-0 uppercase tracking-wide">{col.title}</h4>
+                                        <div className="flex-1 flex flex-col gap-3 min-h-0">
+                                            {col.items.map((item, j) => {
+                                                const isConfigObj = typeof item === 'object' && item.src;
+                                                const src = isConfigObj ? item.src : item;
+                                                const flexVal = isConfigObj ? item.flex : 1;
+                                                const label = isConfigObj ? item.label : null;
+
+                                                return (
+                                                    <div key={j} className="flex flex-col relative min-h-0 shadow-sm hover:shadow transition-shadow" style={{flex: flexVal}}>
+                                                        <div className="flex-1 bg-white border border-gray-100 rounded-xl overflow-hidden relative">
+                                                            {label && (
+                                                                <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold z-10 border ${label==='参考' ? 'bg-gray-200/80 text-gray-600 border-gray-300' : 'bg-blue-50/80 text-blue-600 border-blue-100'}`}>
+                                                                    {label}
+                                                                </span>
+                                                            )}
+                                                            <MediaItem src={src} onZoom={setZoomSrc} />
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    case 'compare_row':
+                        return (
+                            <div className="h-full flex flex-col gap-6 overflow-y-auto pr-2">
+                                {work.pairs.map((pair, i) => (
+                                    <div key={i} className="flex flex-col md:flex-row gap-4 h-[45%] min-h-[280px] w-full items-stretch shrink-0">
+                                        <div className="flex-[0.8] bg-gray-50 rounded-xl border border-gray-200 p-2 flex flex-col relative shadow-inner">
+                                            <span className="absolute top-2 left-2 bg-gray-200/80 backdrop-blur-sm text-gray-600 px-2 py-0.5 rounded text-[10px] font-bold z-10 border border-gray-300">参考</span>
+                                            <MediaItem src={pair.ref} onZoom={setZoomSrc} />
+                                        </div>
+                                        <div className="flex flex-col justify-center items-center text-gray-300">
+                                            <Icons.ArrowLeft className="rotate-180 md:rotate-0 w-6 h-6" />
+                                        </div>
+                                        <div className="flex-[1.2] bg-white rounded-xl border border-gray-100 shadow-sm p-2 flex flex-col relative hover:shadow-md transition-shadow">
+                                            <span className="absolute top-2 left-2 bg-blue-50/80 backdrop-blur-sm text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold z-10 border border-blue-100">结果</span>
+                                            <MediaItem src={pair.res} onZoom={setZoomSrc} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    case 'grid':
+                    case 'grid_2col':
+                    case 'grid_4col':
+                    case 'grid_large':
+                        let cols = 'grid-cols-2 md:grid-cols-3';
+                        if (work.type === 'grid_2col') cols = 'grid-cols-2';
+                        if (work.type === 'grid_large') cols = 'grid-cols-2';
+                        if (work.type === 'grid_4col') cols = 'grid-cols-2 md:grid-cols-4';
+                        
+                        return (
+                            <div className="h-full overflow-y-auto p-4 custom-scrollbar">
+                                <div className={`grid ${cols} gap-6 auto-rows-fr`}>
+                                    {work.items.map((item, i) => (
+                                        <div key={i} className="aspect-square bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all p-1">
+                                            <MediaItem src={item} onZoom={setZoomSrc} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    case 'masonry':
+                        const colCount = 3;
+                        return (
+                            <div className="h-full w-full overflow-hidden p-4 flex gap-4">
+                                {Array.from({ length: colCount }).map((_, colIdx) => (
+                                    <div key={colIdx} className="flex-1 flex flex-col gap-4 h-full">
+                                        {work.items.filter((_, i) => i % colCount === colIdx).map((item, j) => (
+                                            <div key={j} className="flex-1 bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm min-h-0 relative hover:shadow-lg transition-all p-1">
+                                                <MediaItem src={item} onZoom={setZoomSrc} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    case 'single':
+                        return (
+                            <div className="h-full flex items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-100 shadow-inner">
+                                <MediaItem src={work.src} onZoom={setZoomSrc} />
+                            </div>
+                        )
+                    case 'evolution':
+                        return <EvolutionViewer stages={work.stages} onZoom={setZoomSrc} isIdle={isIdle} />
+                    default: return null;
+                }
+            }
+
+            const allCaptured = capturedIds.length === CONFIG.gallery.length;
+
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-[#1a1a1d] font-sans text-slate-800 p-2 md:p-8 selection:bg-yellow-400">
+                <div className="w-full max-w-7xl aspect-[16/10] md:h-[85vh] bg-slate-100 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden relative border border-gray-500/50 flex flex-col ring-8 ring-[#2c2c30]">
+                    <div className="h-12 bg-gray-900 text-white flex justify-between items-center px-6 z-20 shrink-0 border-b border-gray-800 bg-gradient-to-r from-gray-900 to-gray-800">
+                        <div className="flex items-center space-x-3"><div className={`w-2.5 h-2.5 rounded-full ${slide===totalSlides ? 'bg-green-500 shadow-[0_0_8px_lime]' : 'bg-red-500 animate-pulse'}`}></div><span className="font-bold tracking-widest text-sm text-gray-300">{CONFIG.info.title}</span></div>
+                        <div className="flex items-center gap-3"><div className="w-32 h-1.5 bg-gray-700 rounded-full overflow-hidden border border-gray-600/50"><div className="h-full bg-yellow-400 shadow-[0_0_10px_orange] transition-all duration-500" style={{width: `${(slide / totalSlides) * 100}%`}}></div></div><span className="text-xs font-mono font-bold text-yellow-400 tracking-wider">Lv. {slide}</span></div>
+                    </div>
+
+                    <div className="flex-1 relative bg-white overflow-hidden flex flex-col">
+                    {slide === 0 && (
+                        <div className="w-full h-full bg-black flex items-center justify-center relative">
+                        <video ref={videoRef} className="w-full h-full object-contain" src={fixUrl(CONFIG.assets.introVideo)} onEnded={() => { setVideoPlaying(false); nextSlide(); }} playsInline />
+                        {!videoPlaying && (<div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-10"><img src={fixUrl(CONFIG.assets.logo)} className="w-64 mb-8 animate-bounce-slow drop-shadow-[0_0_15px_white]" /><button onClick={handlePlayVideo} className="bg-yellow-400 hover:bg-yellow-300 text-black px-10 py-3 rounded font-black text-xl tracking-tighter hover:scale-105 transition-transform flex items-center border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]"><Icons.Play className="fill-black mr-2 w-6 h-6"/> START</button></div>)}
+                        </div>
+                    )}
+
+                    {slide === 1 && (
+                        <div className="w-full h-full flex flex-col bg-slate-50">
+                        <div className="flex-1 flex flex-col md:flex-row p-8 gap-8 items-stretch overflow-hidden">
+                            <div className="flex-1 flex items-center justify-center"><div className="relative h-full w-full max-w-[320px] hover:-translate-y-2 transition-transform duration-500"><img src={fixUrl(CONFIG.assets.card)} className="h-full w-full object-contain drop-shadow-2xl" /></div></div>
+                            <div className="flex-[0.8] bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden"><div className="bg-gray-50/50 p-3 border-b border-gray-100 flex items-center gap-2"><Icons.User className="text-gray-600 w-5 h-5"/><span className="text-lg font-bold text-gray-700 tracking-wider">训练家档案</span></div><div className="flex-1 p-6 flex items-center justify-center"><div className="text-lg leading-10 text-gray-700 font-medium whitespace-pre-wrap text-center font-mono tracking-widest">{CONFIG.info.description}</div></div></div>
+                            <div className="flex-1 flex flex-col items-center justify-center relative bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group"><div className="w-full bg-gray-50/50 p-3 border-b border-gray-100 flex items-center gap-2"><Icons.IdCard className="text-gray-600 w-5 h-5"/><span className="text-lg font-bold text-gray-700 tracking-wider">训练家证</span></div><div className="relative w-full h-full flex items-center justify-center p-4 mt-4"><div className="relative w-full"><img src={fixUrl(CONFIG.assets.nameTag)} className="w-full h-auto object-contain relative z-10" /><div className="absolute top-0 right-0 w-[23%] aspect-[3/4] z-20 bg-white border-[3px] border-white shadow-md"><img src={fixUrl(CONFIG.assets.photo)} className="w-full h-full object-cover" /></div></div></div></div>
+                        </div>
+                        <div className="h-[20%] min-h-[120px] bg-white border-t border-gray-100 flex items-center justify-center shadow-[inset_0_4px_10px_rgba(0,0,0,0.02)] relative overflow-hidden"><img src={fixUrl(CONFIG.assets.evolutionChain)} className="w-[95%] h-[90%] object-contain" /></div>
+                        </div>
+                    )}
+
+                    {slide === 2 && (
+                        <div className="w-full h-full flex flex-col md:flex-row items-center justify-center p-12 md:p-24 bg-slate-50 gap-16">
+                        <div className="flex-1 w-full h-full max-w-5xl mx-auto flex items-center justify-center bg-white rounded-3xl shadow-sm border border-gray-100 p-12">
+                            <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-16 w-full">
+                                <div className="flex-1 flex items-center justify-center"><div className="relative w-full max-w-sm aspect-square"><img src={fixUrl(CONFIG.assets.radarChart)} className="w-full h-full object-contain drop-shadow-xl mix-blend-multiply" /></div></div>
+                                <div className="flex-1 w-full max-w-lg space-y-5">
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-wider mb-8 border-b-4 border-gray-900 pb-2">能力雷达图</h2>
+                                    {CONFIG.skills.map((skill, idx) => {
+                                        const isOverflow = skill.value > 100;
+                                        return (<div key={idx} className="relative"><div className="flex justify-between text-xs font-bold mb-1.5 tracking-wide px-1"><span className="text-slate-500 uppercase">{skill.name}</span><span className={`font-mono ${isOverflow ? 'text-red-500 font-bold' : 'text-slate-800'}`}>{skill.value}</span></div><div className="h-4 bg-gray-100 rounded-full relative mr-12 border border-gray-200 overflow-visible"><div className={`absolute top-0 left-0 h-full rounded-full flex items-center justify-end ${skill.color} ${isOverflow ? 'shadow-[0_0_15px_rgba(255,0,0,0.5)] z-10' : ''}`} style={{ width: `${skill.value}%`, maxWidth: 'none' }}>{isOverflow && (<div className="absolute -right-4 top-1/2 -translate-y-1/2"><Icons.Zap className="fill-yellow-400 text-yellow-500 animate-bounce drop-shadow-sm w-5 h-5" /></div>)}</div></div></div>)
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    )}
+
+                    {slide === 3 && (
+                        <div className="w-full h-full bg-white p-12 md:p-20 overflow-hidden flex flex-col justify-center"><h2 className="text-3xl font-black text-slate-800 mb-10 border-b-4 border-blue-500 inline-block self-start pb-2">教育背景</h2><div className="space-y-12">{CONFIG.resume.education.map((edu, i) => (<div key={i} className="border-l-4 border-gray-200 pl-8 hover:border-blue-400 transition-colors group"><div className="flex flex-col md:flex-row md:justify-between md:items-baseline mb-3"><h3 className="text-2xl font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{edu.school}</h3><span className="text-base font-bold text-gray-400">{edu.loc}</span></div><div className="flex flex-col md:flex-row md:justify-between md:items-baseline mb-4"><span className="text-lg text-gray-700 font-medium">{edu.dept}</span><span className="text-sm text-gray-400 font-mono">{edu.time}</span></div>{edu.details.length > 0 && (<ul className="list-disc list-inside text-sm text-gray-600 space-y-2 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">{edu.details.map((d, j) => <li key={j}>{d}</li>)}</ul>)}</div>))}</div></div>
+                    )}
+
+                    {slide === 4 && (
+                        <div className="w-full h-full bg-white p-12 md:p-20 overflow-hidden flex flex-col justify-center"><div className="mb-12"><h2 className="text-3xl font-black text-slate-800 mb-2 border-b-4 border-green-500 inline-block pb-2">实习经历</h2></div><div className="flex flex-col gap-10">{CONFIG.resume.experience.map((exp, i) => (<div key={i} className="bg-gray-50/50 p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"><div className="flex justify-between items-baseline mb-4"><h3 className="text-xl font-bold text-gray-900">{exp.org}</h3><span className="text-sm font-bold text-gray-400">{exp.loc}</span></div><div className="flex justify-between items-baseline mb-4 pb-4 border-b border-gray-200/50"><span className="text-lg font-bold text-gray-700">{exp.role}</span><span className="text-sm text-gray-400 font-mono">{exp.time}</span></div>{exp.details && (<ul className="list-disc list-inside text-sm text-gray-600 space-y-2 leading-relaxed">{exp.details.map((d, j) => <li key={j}>{d}</li>)}</ul>)}</div>))}</div></div>
+                    )}
+
+                    {slide === 5 && (
+                        <div className="w-full h-full bg-white p-12 md:p-20 overflow-hidden flex flex-col justify-center"><div className="mb-12"><h2 className="text-3xl font-black text-slate-800 mb-6 border-b-4 border-yellow-500 inline-block pb-2">活动经历</h2></div><div className="space-y-8">{CONFIG.resume.activities.map((act, i) => (<div key={i} className="bg-yellow-50/30 p-8 rounded-2xl border border-yellow-100/50 hover:bg-yellow-50/60 transition-colors"><div className="flex justify-between items-baseline mb-3"><h3 className="text-xl font-bold text-gray-900">{act.org}</h3><span className="text-sm text-gray-500 font-mono">{act.time}</span></div><div className="text-base font-bold text-gray-700 mb-4 flex items-center gap-2"><span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">{act.role}</span><span className="text-gray-400">|</span><span className="text-gray-500 text-sm">{act.loc}</span></div>{act.details && (<ul className="list-disc list-inside text-sm text-gray-600 space-y-2 opacity-90">{act.details.map((d, j) => <li key={j}>{d}</li>)}</ul>)}</div>))}</div></div>
+                    )}
+
+                    {slide === 6 && (
+                        <div className="w-full h-full bg-white p-12 md:p-20 overflow-hidden flex flex-col justify-center"><div className="mb-10"><h2 className="text-3xl font-black text-slate-800 mb-4 border-b-4 border-purple-500 inline-block pb-2">技能</h2></div><div className="bg-slate-50 p-10 rounded-3xl border border-gray-100 shadow-sm leading-loose text-base text-gray-700 whitespace-pre-line relative overflow-hidden"><div className="absolute top-0 right-0 w-32 h-32 bg-purple-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div><div className="relative z-10">{CONFIG.resume.skills}</div></div></div>
+                    )}
+
+                    {slide === 7 && (
+                        <div className="w-full h-full bg-[#f0f2f5] relative overflow-hidden">
+                        <div className={`absolute inset-0 flex flex-col transition-all duration-300 ${selectedWork ? 'translate-x-[-20%] opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
+                            <div className="p-3 border-b bg-white shadow-sm z-10 flex justify-between items-center shrink-0"><div className="flex items-center gap-4"><h2 className="font-bold text-gray-800 text-lg flex items-center gap-2"><Icons.Box className="text-blue-600 w-5 h-5"/> 作品集</h2><div className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full"><div className="w-20 h-1.5 bg-gray-300 rounded-full overflow-hidden"><div className="h-full bg-blue-500 transition-all duration-500" style={{width: `${(capturedIds.length / CONFIG.gallery.length) * 100}%`}}></div></div><span className="text-[10px] font-bold text-gray-500">{capturedIds.length}/{CONFIG.gallery.length}</span></div></div><div className="text-[10px] font-bold text-gray-400">点击查看详情</div></div>
+                            <div className="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-2 md:grid-cols-4 gap-4 content-start pb-20">{CONFIG.gallery.map(item => { const isCaptured = capturedIds.includes(item.id); const isEvolution = item.type === 'evolution'; return (<div key={item.id} onClick={() => handleCapture(item)} className={`group relative bg-white rounded-lg border-2 transition-all cursor-pointer overflow-hidden flex flex-col h-28 md:h-32 shadow-sm hover:shadow-md hover:-translate-y-0.5 ${isCaptured ? (isEvolution ? 'border-yellow-400' : 'border-blue-500') : 'border-gray-200 hover:border-blue-300'}`}><div className="flex h-full"><div className="w-[55%] h-full bg-gray-50 relative overflow-hidden border-r border-gray-100 flex items-center justify-center p-1"><img src={fixUrl(item.thumbnail)} className={`w-full h-full object-contain transition-all duration-500 ${isCaptured ? 'grayscale-0 scale-100' : 'grayscale-[0.3] scale-95 opacity-80'}`} /></div><div className="w-[45%] p-2 flex flex-col justify-center relative bg-white"><h3 className="font-bold text-xs text-gray-800 mb-1 leading-tight group-hover:text-blue-600 line-clamp-2">{item.title}</h3>{isCaptured && (<div className="mt-1">{isEvolution ? <Icons.Star className="fill-yellow-400 text-yellow-500 w-4 h-4"/> : <Icons.CheckCircle className="fill-blue-500 text-white w-4 h-4"/>}</div>)}</div></div></div>) })}</div>
+                        </div>
+                        <div className={`absolute inset-0 bg-white flex flex-col transition-transform duration-300 z-20 ${selectedWork ? 'translate-y-0' : 'translate-y-full'}`}><div className="flex flex-col h-full overflow-hidden"><div className="bg-white border-b shadow-sm z-10 shrink-0 p-3 md:p-4"><div className="flex items-center justify-between mb-1"><button onClick={() => setSelectedWork(null)} className="flex items-center gap-1 text-sm font-bold text-gray-600 hover:text-black transition-colors px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200"><Icons.ArrowLeft className="w-4 h-4"/> 返回</button><h2 className="text-xl font-black text-gray-800">{selectedWork?.title}</h2><div className="w-16"></div></div>{selectedWork?.desc && (<div className="text-sm text-gray-600 leading-relaxed text-center max-w-5xl mx-auto px-4 whitespace-pre-wrap">{selectedWork.desc}</div>)}</div><div className="flex-1 overflow-hidden bg-gray-50 p-2 md:p-4 relative"><div className="w-full h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative p-2">{selectedWork && renderDetailContent(selectedWork)}</div><div className="absolute bottom-6 right-6 pointer-events-none bg-black/50 text-white text-xs px-2 py-1 rounded backdrop-blur-sm z-20">点击图片可放大</div></div></div></div>
+                        </div>
+                    )}
+
+                    {slide === 8 && (
+                        <div className="w-full h-full bg-slate-900 text-white flex flex-col items-center justify-center p-8 relative overflow-hidden"><div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/40 via-slate-900 to-slate-900"></div><div className="relative z-10 text-center space-y-8 animate-in fade-in zoom-in duration-700"><h1 className="text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">THANK YOU</h1><div className="bg-white/10 backdrop-blur-md p-10 rounded-2xl border border-white/10 space-y-8 max-w-lg mx-auto shadow-2xl"><div className="flex items-center gap-6 text-xl group cursor-default"><div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform"><Icons.Phone className="fill-white w-6 h-6"/></div><span className="font-mono font-bold tracking-wider">186-0350-0000</span><span className="text-xs bg-white/20 px-2 py-1 rounded border border-white/10">微信同号</span></div><div className="flex items-center gap-6 text-xl group cursor-default"><div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform"><Icons.Mail className="w-6 h-6"/></div><div className="flex flex-col text-left text-base font-mono space-y-1"><span>1918524467@qq.com</span><span>hopeaupl@gmail.com</span></div></div></div><p className="text-gray-400 text-sm tracking-widest uppercase opacity-60">期待与您共创未来</p></div></div>
+                    )}
+                    </div>
+
+                    <div className="h-14 bg-gray-800 flex items-center justify-center border-t border-gray-600 relative z-30 shadow-lg"><div className="flex gap-10 items-center"><button onClick={prevSlide} className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all text-gray-400 hover:text-white cursor-pointer"><Icons.ChevronLeft className="w-8 h-8"/></button><div className="w-24 h-1.5 bg-gray-700 rounded-full"></div><button id="next-btn" onClick={nextSlide} className={`w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all text-gray-400 hover:text-white cursor-pointer ${((isIdle && !selectedWork) || (slide === 7 && allCaptured)) ? 'bg-yellow-400 text-black animate-pulse shadow-[0_0_15px_red] ring-2 ring-red-500' : ''}`}><Icons.ChevronRight className="w-8 h-8"/></button></div></div>
+                </div>
+                <div id="lightbox" className="fixed inset-0 z-[100] bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => document.getElementById('lightbox').classList.add('hidden')}>
+                    <button className="absolute top-6 right-6 text-white/70 hover:text-white bg-white/10 rounded-full p-2"><Icons.X className="w-8 h-8"/></button>
+                    <div id="lightbox-content" className="w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}></div>
+                </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

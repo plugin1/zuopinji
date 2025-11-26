@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>张姜盼盼作品集 2025</title>
     
-    <!-- 1. 样式库 -->
+    <!-- 样式库 -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 2. 核心引擎 (国内源) -->
+    <!-- 核心引擎 (国内源，防黑屏) -->
     <script src="https://cdn.staticfile.org/react/18.2.0/umd/react.development.js"></script>
     <script src="https://cdn.staticfile.org/react-dom/18.2.0/umd/react-dom.development.js"></script>
     <script src="https://cdn.staticfile.org/babel-standalone/7.22.20/babel.min.js"></script>
@@ -22,23 +22,20 @@
         .preserve-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
-        /* 加载动画 */
         #loading { position: fixed; inset: 0; background: #1a1a1d; color: white; display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s; }
     </style>
 </head>
 <body>
-    <!-- 启动加载页 -->
     <div id="loading">
         <div class="text-center">
             <div class="text-2xl font-bold animate-pulse mb-2">SYSTEM LOADING...</div>
-            <div class="text-xs text-gray-500">正在连接云端数据库</div>
+            <div class="text-xs text-gray-500">正在连接云端图鉴</div>
         </div>
     </div>
 
     <div id="root"></div>
 
     <script type="text/babel">
-        // 关闭加载动画
         window.onload = () => {
             setTimeout(() => {
                 const loader = document.getElementById('loading');
@@ -48,7 +45,7 @@
 
         const { useState, useRef, useEffect } = React;
 
-        // --- 内置图标组件 ---
+        // --- 内置图标 ---
         const Icons = {
             Play: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
             ChevronLeft: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>,
@@ -67,20 +64,19 @@
             Layers: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         };
 
-        // --- 链接修复逻辑 (直接使用 GitHub Raw 链接，方便在线部署) ---
-        // 基础 URL 设置为你之前的仓库地址，这样你只需要传这一个 HTML 文件就行
+        // 基础 URL：指向你的 GitHub 仓库
         const GITHUB_BASE = "https://raw.githubusercontent.com/plugin1/zuopinji/main/";
 
         const fixUrl = (url) => {
             if (!url) return "";
             if (url.startsWith("http")) {
-                // 如果是 blob 链接，自动转 raw
+                // 自动修复 blob 链接
                 if (url.includes('github.com') && url.includes('/blob/')) {
                     return url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
                 }
                 return url;
             }
-            // 默认拼接你的仓库地址，确保在线能看
+            // 拼接仓库地址
             return `${GITHUB_BASE}${encodeURIComponent(url)}`;
         };
 
@@ -90,11 +86,11 @@
                 description: "长情冒险家 深度研究员\n飞速学习者 洞若观火人\n实干建筑师 灵感淘金客\n传奇抗压王 铁臂救火员\n水土全服者 夜晚享受人\n犀利锐评者 挥铲老吃家\n快乐小品王 美好观察员", 
             },
             assets: {
-                introVideo: "我是谁.mp4", // 使用文件名，fixUrl 会自动拼上去
+                // 使用原始文件名
+                introVideo: "我是谁.mp4",
                 logo: "宝可梦logo.png",
                 photo: "大新证件照202509.png",
                 nameTag: "名字年龄联系方式.png",
-                // 使用你指定的最新卡牌链接
                 card: "https://github.com/plugin1/zuopinji/blob/main/%E5%8D%A7%E6%A7%BD.png", 
                 evolutionChain: "进化.png",
                 radarChart: "六边形.png",
@@ -187,8 +183,7 @@
                 title: "绘画",
                 type: "grid_4col", 
                 desc: "",
-                // 更新封面为生活照2
-                thumbnail: "四10_手绘4_生活照2_张姜盼盼_12月31日到.jpg", 
+                thumbnail: "四10_手绘4_生活照2_张姜盼盼_12月31日到.jpg", // 已修正为指定封面
                 items: [
                     "四10_手绘1_张姜盼盼_12月31日到.jpg",
                     "四10_手绘4_生活照1_张姜盼盼_12月31日到.jpg",
@@ -249,7 +244,6 @@
                 title: "传统剪纸",
                 type: "masonry", 
                 desc: "第六届“泸沽湖畔少年行”公益夏令营 云南志愿者教师 2025年8月\n为来自3个村落的100余名当地儿童设计并开展一周的中国传统剪纸艺术课程，促进文化遗产传承与创意表达",
-                // 移除封面 cut_thumb，使用第一张作品做封面
                 thumbnail: "4c67a4c3bde6dec2b5bb2df6a2ad844e.jpg", 
                 items: [
                     "4c67a4c3bde6dec2b5bb2df6a2ad844e.jpg",
@@ -289,7 +283,7 @@
             ]
         };
 
-        // --- 组件部分 ---
+        // --- UI Logic ---
 
         const Lightbox = ({ src, onClose }) => {
             if (!src) return null;
@@ -680,6 +674,7 @@
 
                     <div className="h-14 bg-gray-800 flex items-center justify-center border-t border-gray-600 relative z-30 shadow-lg"><div className="flex gap-10 items-center"><button onClick={prevSlide} className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all text-gray-400 hover:text-white cursor-pointer"><Icons.ChevronLeft className="w-8 h-8"/></button><div className="w-24 h-1.5 bg-gray-700 rounded-full"></div><button id="next-btn" onClick={nextSlide} className={`w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all text-gray-400 hover:text-white cursor-pointer ${((isIdle && !selectedWork) || (slide === 7 && allCaptured)) ? 'bg-yellow-400 text-black animate-pulse shadow-[0_0_15px_red] ring-2 ring-red-500' : ''}`}><Icons.ChevronRight className="w-8 h-8"/></button></div></div>
                 </div>
+                {/* 修正灯箱 ID，避免引用错误 */}
                 <div id="lightbox" className="fixed inset-0 z-[100] bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => document.getElementById('lightbox').classList.add('hidden')}>
                     <button className="absolute top-6 right-6 text-white/70 hover:text-white bg-white/10 rounded-full p-2"><Icons.X className="w-8 h-8"/></button>
                     <div id="lightbox-content" className="w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}></div>
